@@ -1,0 +1,16 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules
+
+# Production build output
+dist
+dist-ssr
+
+# Local & environment files
+.env
+.env.local
+ip.txt
