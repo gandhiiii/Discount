@@ -5,13 +5,13 @@ import { getSupabaseClient } from '../lib/supabaseClient';
 
 const AppContext = createContext();
 
-const PRESET_DEMO_USERS = new Set([
-  'USR-FINANCE-MGR',
-  'USR-CFO-OFFICIAL',
-  'USR-MD-EXEC',
-  'USR-DOC-SARAH',
-  'USR-DOC-RAJESH',
-  'USR-DOC-MICHAEL',
+export const PRESET_DEMO_USERS_LOWER = new Set([
+  'usr-finance-mgr',
+  'usr-cfo-official',
+  'usr-md-exec',
+  'usr-doc-sarah',
+  'usr-doc-rajesh',
+  'usr-doc-michael',
   'finance_mgr',
   'cfo_official',
   'md_director',
@@ -20,13 +20,42 @@ const PRESET_DEMO_USERS = new Set([
   'doc_michael'
 ]);
 
-const PRESET_DEMO_DOCTORS = new Set([
-  'Dr. Sarah Jenkins',
-  'Dr. Michael Chang',
-  'Dr. Rajesh Kumar',
-  'Dr. Elena Rostova',
-  'Dr. Ananya Sharma'
-]);
+export const PRESET_DEMO_DOCTORS_KEYWORDS = [
+  'sarah jenkins',
+  'sarah jenkin',
+  'dr. sarah jenkins',
+  'dr. sarah jenkin',
+  'michael chang',
+  'dr. michael chang',
+  'rajesh kumar',
+  'dr. rajesh kumar',
+  'elena rostova',
+  'dr. elena rostova',
+  'ananya sharma',
+  'dr. ananya sharma',
+  'sarah',
+  'jenkins',
+  'michael',
+  'chang',
+  'rajesh',
+  'elena',
+  'rostova',
+  'ananya'
+];
+
+export const isPresetDemoDoctor = (docName) => {
+  if (!docName || typeof docName !== 'string') return false;
+  const lower = docName.trim().toLowerCase();
+  return PRESET_DEMO_DOCTORS_KEYWORDS.some(keyword => lower.includes(keyword));
+};
+
+export const isPresetDemoUser = (userObjOrId) => {
+  if (!userObjOrId) return false;
+  const idStr = typeof userObjOrId === 'string' ? userObjOrId : (userObjOrId.id || userObjOrId.username || '');
+  const lower = idStr.trim().toLowerCase();
+  const nameStr = typeof userObjOrId === 'object' ? (userObjOrId.name || '') : '';
+  return PRESET_DEMO_USERS_LOWER.has(lower) || isPresetDemoDoctor(nameStr) || isPresetDemoDoctor(idStr);
+};
 
 const INITIAL_USERS = [
   {
@@ -125,6 +154,32 @@ export const getDepartmentForService = (serviceName) => {
 const INITIAL_DOCTORS = [];
 
 export const AppProvider = ({ children }) => {
+  const [supabaseConfig, setSupabaseConfigState] = useState(() => {
+    const defaultUrl = 'https://iqxeglbbvseirtjbwtdu.supabase.co';
+    const defaultKey = 'sb_publishable_5fFaz9BHk_oxp_LyBH9e4A_8JtEIErr';
+    const saved = localStorage.getItem('carepulse_supabase_config');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.url && !parsed.url.includes('mock') && parsed.anonKey && !parsed.anonKey.includes('mock')) {
+          return parsed;
+        }
+      } catch (e) {}
+    }
+    const envUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL || defaultUrl;
+    const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || defaultKey;
+    return {
+      url: envUrl,
+      anonKey: envKey,
+      isConnected: Boolean(envUrl && envKey)
+    };
+  });
+
+  const setSupabaseConfig = (config) => {
+    setSupabaseConfigState(config);
+    localStorage.setItem('carepulse_supabase_config', JSON.stringify(config));
+  };
+
   const [users, setUsers] = useState(() => {
     const savedDel = localStorage.getItem('carepulse_deleted_users');
     const delSet = new Set(savedDel ? JSON.parse(savedDel) : []);
@@ -139,8 +194,7 @@ export const AppProvider = ({ children }) => {
           !delSet.has(u.id) && 
           !delSet.has(u.username) && 
           !delSet.has(u.name) &&
-          !PRESET_DEMO_USERS.has(u.id) &&
-          !PRESET_DEMO_USERS.has(u.username)
+          !isPresetDemoUser(u)
         );
         return filtered.length > 0 ? filtered : INITIAL_USERS;
       }
@@ -183,7 +237,7 @@ export const AppProvider = ({ children }) => {
     if (!saved) return [];
     try {
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) ? parsed.filter(d => !delSet.has(d) && !PRESET_DEMO_DOCTORS.has(d)) : [];
+      return Array.isArray(parsed) ? parsed.filter(d => !delSet.has(d) && !isPresetDemoDoctor(d)) : [];
     } catch (e) {
       return [];
     }
@@ -204,19 +258,48 @@ export const AppProvider = ({ children }) => {
     return INITIAL_REQUESTS.filter(r => r.status !== 'DELETED' && !delSet.has(r.id));
   });
 
-  // Sync doctors directory with local storage filter
+  // Sync doctors directory with local storage filter & purge legacy preset demo data
   useEffect(() => {
     const savedDel = localStorage.getItem('carepulse_deleted_doctors');
     const delSet = new Set(savedDel ? JSON.parse(savedDel) : []);
 
     setDoctors(prev => {
-      const filtered = prev.filter(d => !delSet.has(d) && !PRESET_DEMO_DOCTORS.has(d));
+      const filtered = prev.filter(d => !delSet.has(d) && !isPresetDemoDoctor(d));
       if (JSON.stringify(filtered) !== JSON.stringify(prev)) {
         localStorage.setItem('carepulse_doctors', JSON.stringify(filtered));
         return filtered;
       }
       return prev;
     });
+
+    setUsers(prev => {
+      const filtered = prev.filter(u => !isPresetDemoUser(u));
+      if (JSON.stringify(filtered) !== JSON.stringify(prev)) {
+        const nextUsers = filtered.length > 0 ? filtered : INITIAL_USERS;
+        localStorage.setItem('carepulse_users', JSON.stringify(nextUsers));
+        return nextUsers;
+      }
+      return prev;
+    });
+
+    // Execute remote delete query on Supabase to clean remote tables
+    try {
+      const client = getSupabaseClient(supabaseConfig?.url, supabaseConfig?.anonKey);
+      if (client) {
+        ['sarah', 'jenkins', 'jenkin', 'michael', 'chang', 'rajesh', 'kumar', 'elena', 'rostova', 'ananya', 'sharma'].forEach(async (kw) => {
+          try {
+            await client.from('hospital_doctors').delete().ilike('name', `%${kw}%`);
+            await client.from('hospital_users').delete().ilike('name', `%${kw}%`);
+          } catch (err) {}
+        });
+        ['usr-finance-mgr', 'usr-cfo-official', 'usr-md-exec', 'usr-doc-sarah', 'usr-doc-rajesh', 'usr-doc-michael', 'finance_mgr', 'cfo_official', 'md_director', 'doc_sarah', 'doc_rajesh', 'doc_michael'].forEach(async (uname) => {
+          try {
+            await client.from('hospital_users').delete().eq('username', uname);
+            await client.from('hospital_users').delete().eq('id', uname.toUpperCase());
+          } catch (err) {}
+        });
+      }
+    } catch (err) {}
   }, []);
 
   const [activeUser, setActiveUser] = useState(() => {
@@ -239,32 +322,6 @@ export const AppProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
   });
 
-  const [supabaseConfig, setSupabaseConfigState] = useState(() => {
-    const defaultUrl = 'https://iqxeglbbvseirtjbwtdu.supabase.co';
-    const defaultKey = 'sb_publishable_5fFaz9BHk_oxp_LyBH9e4A_8JtEIErr';
-    const saved = localStorage.getItem('carepulse_supabase_config');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.url && !parsed.url.includes('mock') && parsed.anonKey && !parsed.anonKey.includes('mock')) {
-          return parsed;
-        }
-      } catch (e) {}
-    }
-    const envUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL || defaultUrl;
-    const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || defaultKey;
-    return {
-      url: envUrl,
-      anonKey: envKey,
-      isConnected: Boolean(envUrl && envKey)
-    };
-  });
-
-  const setSupabaseConfig = (config) => {
-    setSupabaseConfigState(config);
-    localStorage.setItem('carepulse_supabase_config', JSON.stringify(config));
-  };
-
   const [toastAlert, setToastAlert] = useState(null);
 
   // Sync active user & auth state
@@ -284,7 +341,7 @@ export const AppProvider = ({ children }) => {
 
   // Supabase Realtime Database Subscriptions & Fetching
   useEffect(() => {
-    const client = getSupabaseClient(supabaseConfig.url, supabaseConfig.anonKey);
+    const client = getSupabaseClient(supabaseConfig?.url, supabaseConfig?.anonKey);
     if (!client) return;
 
     let isMounted = true;
@@ -294,6 +351,7 @@ export const AppProvider = ({ children }) => {
           .from('discount_requests')
           .select('*')
           .order('created_at', { ascending: false });
+
         if (!reqErr && Array.isArray(remoteReqs) && isMounted) {
           const savedDelReqs = localStorage.getItem('carepulse_deleted_requests');
           const deletedReqSet = new Set(savedDelReqs ? JSON.parse(savedDelReqs) : []);
@@ -342,11 +400,23 @@ export const AppProvider = ({ children }) => {
             }
             return prev;
           });
-             const { data: remoteUsers, error: userErr } = await client.from('hospital_users').select('*');
-        if (!userErr && Array.isArray(remoteUsers) && remoteUsers.length > 0 && isMounted) {
+        }
+
+        const { data: remoteUsers, error: userErr } = await client.from('hospital_users').select('*');
+        if (!userErr && Array.isArray(remoteUsers) && isMounted) {
           const savedDelUsers = localStorage.getItem('carepulse_deleted_users');
           const deletedUserSet = new Set(savedDelUsers ? JSON.parse(savedDelUsers) : []);
-          const filteredUsers = remoteUsers.filter(u => u.active !== false && u.role !== 'DELETED' && !deletedUserSet.has(u.id) && !deletedUserSet.has(u.username) && !deletedUserSet.has(u.name) && !PRESET_DEMO_USERS.has(u.id) && !PRESET_DEMO_USERS.has(u.username));
+          
+          remoteUsers.forEach(async (u) => {
+            if (isPresetDemoUser(u)) {
+              try {
+                await client.from('hospital_users').delete().eq('id', u.id);
+                await client.from('hospital_users').delete().eq('username', u.username);
+              } catch (e) {}
+            }
+          });
+
+          const filteredUsers = remoteUsers.filter(u => u.active !== false && u.role !== 'DELETED' && !deletedUserSet.has(u.id) && !deletedUserSet.has(u.username) && !deletedUserSet.has(u.name) && !isPresetDemoUser(u));
 
           if (filteredUsers.length > 0) {
             isRemoteUpdateRef.current = true;
@@ -363,11 +433,21 @@ export const AppProvider = ({ children }) => {
         if (!docErr && Array.isArray(remoteDocs) && isMounted) {
           const savedDelDocs = localStorage.getItem('carepulse_deleted_doctors');
           const deletedDocSet = new Set(savedDelDocs ? JSON.parse(savedDelDocs) : []);
-          const fetchedDocNames = remoteDocs.map(d => d.name).filter(name => name && !deletedDocSet.has(name) && !PRESET_DEMO_DOCTORS.has(name));
+          
+          remoteDocs.forEach(async (d) => {
+            if (isPresetDemoDoctor(d.name)) {
+              try {
+                await client.from('hospital_doctors').delete().eq('id', d.id);
+                await client.from('hospital_doctors').delete().ilike('name', `%${d.name}%`);
+              } catch (e) {}
+            }
+          });
+
+          const fetchedDocNames = remoteDocs.map(d => d.name).filter(name => name && !deletedDocSet.has(name) && !isPresetDemoDoctor(name));
 
           isRemoteUpdateRef.current = true;
           setDoctors(prev => {
-            const filteredPrev = prev.filter(d => !deletedDocSet.has(d) && !PRESET_DEMO_DOCTORS.has(d));
+            const filteredPrev = prev.filter(d => !deletedDocSet.has(d) && !isPresetDemoDoctor(d));
             const merged = Array.from(new Set([...fetchedDocNames, ...filteredPrev]));
             if (JSON.stringify(merged) !== JSON.stringify(prev)) {
               localStorage.setItem('carepulse_doctors', JSON.stringify(merged));
@@ -465,7 +545,7 @@ export const AppProvider = ({ children }) => {
             const savedDelUsers = localStorage.getItem('carepulse_deleted_users');
             const deletedUserSet = new Set(savedDelUsers ? JSON.parse(savedDelUsers) : []);
 
-            if (u.active === false || u.role === 'DELETED' || deletedUserSet.has(u.id) || deletedUserSet.has(u.username) || deletedUserSet.has(u.name) || PRESET_DEMO_USERS.has(u.id) || PRESET_DEMO_USERS.has(u.username)) {
+            if (u.active === false || u.role === 'DELETED' || deletedUserSet.has(u.id) || deletedUserSet.has(u.username) || deletedUserSet.has(u.name) || isPresetDemoUser(u)) {
               isRemoteUpdateRef.current = true;
               setUsers(prev => prev.filter(item => item.id !== u.id && item.username !== u.username && item.name !== u.name));
               return;
@@ -497,7 +577,7 @@ export const AppProvider = ({ children }) => {
             const savedDelDocs = localStorage.getItem('carepulse_deleted_doctors');
             const deletedDocSet = new Set(savedDelDocs ? JSON.parse(savedDelDocs) : []);
 
-            if (!doc.name || deletedDocSet.has(doc.name) || PRESET_DEMO_DOCTORS.has(doc.name)) {
+            if (!doc.name || deletedDocSet.has(doc.name) || isPresetDemoDoctor(doc.name)) {
               isRemoteUpdateRef.current = true;
               setDoctors(prev => prev.filter(item => item !== doc.name));
               return;
@@ -519,7 +599,7 @@ export const AppProvider = ({ children }) => {
             }
           }
         }
-      )`;     )
+      )
       .subscribe();
 
     return () => {
@@ -588,7 +668,7 @@ export const AppProvider = ({ children }) => {
 
     try {
       const records = usersList
-        .filter(u => u && u.active !== false && u.role !== 'DELETED' && !PRESET_DEMO_USERS.has(u.id) && !PRESET_DEMO_USERS.has(u.username))
+        .filter(u => u && u.active !== false && u.role !== 'DELETED' && !isPresetDemoUser(u))
         .map(u => ({
           id: u.id,
           username: u.username || u.id,
@@ -619,7 +699,7 @@ export const AppProvider = ({ children }) => {
 
     try {
       const records = doctorsList
-        .filter(d => d && d.trim() && !PRESET_DEMO_DOCTORS.has(d.trim()))
+        .filter(d => d && d.trim() && !isPresetDemoDoctor(d))
         .map(d => ({
           id: 'DOC-' + d.trim().toLowerCase().replace(/[^a-z0-9]/g, '_'),
           name: d.trim()
