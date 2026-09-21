@@ -515,7 +515,7 @@ export const RequestDetailModal = ({ request, onClose }) => {
 
           <div>
             <span className="text-[10px] text-slate-500 uppercase font-bold block">Attending Doctor</span>
-            <span className="font-semibold text-sm text-slate-900">{request.doctorName || request.referenceName || 'Attending Doctor'}</span>
+            <span className="font-semibold text-sm text-slate-900">{request.doctorName || request.referenceName || (doctors && doctors[0]) || 'Consulting Doctor'}</span>
           </div>
         </div>
 

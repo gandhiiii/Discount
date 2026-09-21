@@ -17,12 +17,12 @@ import {
 } from 'lucide-react';
 
 export const DoctorPortalView = ({ onSelectRequest, onOpenNewModal }) => {
-  const { requests, activeUser, createDiscountRequest, triggerToast } = useApp();
+  const { requests, activeUser, createDiscountRequest, triggerToast, doctors } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [showDoctorModal, setShowDoctorModal] = useState(false);
 
-  const doctorName = activeUser?.name || 'Attending Doctor';
+  const doctorName = activeUser?.name || (doctors && doctors[0]) || 'Hospital Doctor';
 
   // Filter requests ONLY for this specific doctor's patients
   const doctorRequests = requests.filter(r => {

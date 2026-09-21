@@ -14,7 +14,7 @@ import {
 
 export const DoctorBiometricModal = ({ 
   isOpen, 
-  doctorName = 'Attending Doctor / Authority', 
+  doctorName = 'Hospital Doctor / Authority', 
   request, 
   onVerified, 
   onCancel 
