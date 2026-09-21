@@ -25,7 +25,7 @@ export const NewDiscountModal = ({ onClose }) => {
 
   const defaultService = (services && services[0]) || 'Consultation Fees';
   const defaultDept = getDepartmentForService ? getDepartmentForService(defaultService) : (departments[0] || 'OPD');
-  const defaultDoc = (doctors && doctors[0]) || 'Dr. Sarah Jenkins';
+  const defaultDoc = (doctors && doctors[0]) || '';
 
   const [formData, setFormData] = useState({
     patientId: 'PT-' + Math.floor(10000 + Math.random() * 90000),
@@ -335,7 +335,7 @@ export const NewDiscountModal = ({ onClose }) => {
                         <input
                           type="text"
                           required
-                          placeholder="Type Doctor Name (e.g. Dr. Sarah Jenkins)..."
+                          placeholder="Type Doctor Name..."
                           value={formData.doctorName}
                           onChange={e => {
                             const val = e.target.value;
@@ -400,7 +400,7 @@ export const NewDiscountModal = ({ onClose }) => {
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Staff / Doctor / Reference Name</label>
                 <input
                   type="text"
-                  placeholder="e.g. Dr. Michael Chang / Nurse Sarah"
+                  placeholder="e.g. Attending Doctor / Staff Reference"
                   value={formData.referenceName}
                   onChange={e => setFormData({ ...formData, referenceName: e.target.value })}
                   className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-600 min-w-0 box-border"

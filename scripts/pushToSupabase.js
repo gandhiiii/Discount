@@ -95,6 +95,22 @@ async function pushData() {
   } else {
     console.log('✅ Discount Requests pushed/synced successfully!');
   }
+  if (Array.isArray(data.doctors) && data.doctors.length > 0) {
+    console.log(`\n--- Pushing ${data.doctors.length} Doctors to hospital_doctors table ---`);
+    const docRecords = data.doctors.map(d => ({
+      id: 'DOC-' + d.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+      name: d
+    }));
+    const { error: docsErr } = await supabase
+      .from('hospital_doctors')
+      .upsert(docRecords, { onConflict: 'name' });
+
+    if (docsErr) {
+      console.error('❌ Error pushing doctors:', docsErr.message);
+    } else {
+      console.log('✅ Doctors pushed/synced successfully!');
+    }
+  }
 }
 
 pushData();

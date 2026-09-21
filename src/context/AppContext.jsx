@@ -5,6 +5,29 @@ import { getSupabaseClient } from '../lib/supabaseClient';
 
 const AppContext = createContext();
 
+const PRESET_DEMO_USERS = new Set([
+  'USR-FINANCE-MGR',
+  'USR-CFO-OFFICIAL',
+  'USR-MD-EXEC',
+  'USR-DOC-SARAH',
+  'USR-DOC-RAJESH',
+  'USR-DOC-MICHAEL',
+  'finance_mgr',
+  'cfo_official',
+  'md_director',
+  'doc_sarah',
+  'doc_rajesh',
+  'doc_michael'
+]);
+
+const PRESET_DEMO_DOCTORS = new Set([
+  'Dr. Sarah Jenkins',
+  'Dr. Michael Chang',
+  'Dr. Rajesh Kumar',
+  'Dr. Elena Rostova',
+  'Dr. Ananya Sharma'
+]);
+
 const INITIAL_USERS = [
   {
     id: 'USR-ADMIN',
@@ -18,86 +41,9 @@ const INITIAL_USERS = [
     phone: '+1 (555) 000-1122',
     active: true,
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80'
-  },
-  {
-    id: 'USR-FINANCE-MGR',
-    username: 'finance_mgr',
-    password: 'Pass@123',
-    name: 'Finance Manager Desk',
-    role: 'BILLING_MANAGER',
-    designation: 'Finance Manager (Up to ₹25,000/-)',
-    department: 'Billing & Accounts',
-    email: 'fm@stavya.org',
-    phone: '+91 98765 43210',
-    active: true,
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'
-  },
-  {
-    id: 'USR-CFO-OFFICIAL',
-    username: 'cfo_official',
-    password: 'Pass@123',
-    name: 'CFO Desk',
-    role: 'CFO',
-    designation: 'Chief Financial Officer (Above ₹25k - ₹2 Lacs)',
-    department: 'Executive Finance',
-    email: 'cfo@stavya.org',
-    phone: '+91 98765 43211',
-    active: true,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80'
-  },
-  {
-    id: 'USR-MD-EXEC',
-    username: 'md_director',
-    password: 'Pass@123',
-    name: 'Managing Director / Chairman',
-    role: 'MD',
-    designation: 'MD / Vice Chairman / Chairman / Director',
-    department: 'Executive Board',
-    email: 'director@stavya.org',
-    phone: '+91 98765 43212',
-    active: true,
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80'
-  },
-  {
-    id: 'USR-DOC-SARAH',
-    username: 'doc_sarah',
-    password: 'Pass@123',
-    name: 'Dr. Sarah Jenkins',
-    role: 'DOCTOR',
-    designation: 'Senior Spine Surgeon & Consultant',
-    department: 'Radiology',
-    email: 'sarah.jenkins@stavya.org',
-    phone: '+91 98765 11001',
-    active: true,
-    avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=150&q=80'
-  },
-  {
-    id: 'USR-DOC-RAJESH',
-    username: 'doc_rajesh',
-    password: 'Pass@123',
-    name: 'Dr. Rajesh Kumar',
-    role: 'DOCTOR',
-    designation: 'Consultant Orthopedic Surgeon',
-    department: 'OPD',
-    email: 'rajesh.kumar@stavya.org',
-    phone: '+91 98765 11002',
-    active: true,
-    avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=150&q=80'
-  },
-  {
-    id: 'USR-DOC-MICHAEL',
-    username: 'doc_michael',
-    password: 'Pass@123',
-    name: 'Dr. Michael Chang',
-    role: 'DOCTOR',
-    designation: 'Attending Radiologist & Spine Consultant',
-    department: 'Radiology',
-    email: 'michael.chang@stavya.org',
-    phone: '+91 98765 11003',
-    active: true,
-    avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=150&q=80'
   }
 ];
+
 
 const INITIAL_REQUESTS = [
   {
@@ -277,9 +223,19 @@ export const AppProvider = ({ children }) => {
     if (!saved) return INITIAL_USERS.filter(u => !delSet.has(u.id) && !delSet.has(u.username) && !delSet.has(u.name));
     try {
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) 
-        ? parsed.filter(u => u.active !== false && u.role !== 'DELETED' && !delSet.has(u.id) && !delSet.has(u.username) && !delSet.has(u.name)) 
-        : INITIAL_USERS.filter(u => !delSet.has(u.id) && !delSet.has(u.username) && !delSet.has(u.name));
+      if (Array.isArray(parsed)) {
+        const filtered = parsed.filter(u => 
+          u.active !== false && 
+          u.role !== 'DELETED' && 
+          !delSet.has(u.id) && 
+          !delSet.has(u.username) && 
+          !delSet.has(u.name) &&
+          !PRESET_DEMO_USERS.has(u.id) &&
+          !PRESET_DEMO_USERS.has(u.username)
+        );
+        return filtered.length > 0 ? filtered : INITIAL_USERS;
+      }
+      return INITIAL_USERS.filter(u => !delSet.has(u.id) && !delSet.has(u.username) && !delSet.has(u.name));
     } catch (e) {
       return INITIAL_USERS.filter(u => !delSet.has(u.id) && !delSet.has(u.username) && !delSet.has(u.name));
     }
@@ -315,12 +271,12 @@ export const AppProvider = ({ children }) => {
     const savedDel = localStorage.getItem('carepulse_deleted_doctors');
     const delSet = new Set(savedDel ? JSON.parse(savedDel) : []);
     const saved = localStorage.getItem('carepulse_doctors');
-    if (!saved) return INITIAL_DOCTORS.filter(d => !delSet.has(d));
+    if (!saved) return [];
     try {
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) ? parsed.filter(d => !delSet.has(d)) : INITIAL_DOCTORS.filter(d => !delSet.has(d));
+      return Array.isArray(parsed) ? parsed.filter(d => !delSet.has(d) && !PRESET_DEMO_DOCTORS.has(d)) : [];
     } catch (e) {
-      return INITIAL_DOCTORS.filter(d => !delSet.has(d));
+      return [];
     }
   });
 
@@ -345,7 +301,7 @@ export const AppProvider = ({ children }) => {
     const delSet = new Set(savedDel ? JSON.parse(savedDel) : []);
 
     setDoctors(prev => {
-      const filtered = prev.filter(d => !delSet.has(d));
+      const filtered = prev.filter(d => !delSet.has(d) && !PRESET_DEMO_DOCTORS.has(d));
       if (JSON.stringify(filtered) !== JSON.stringify(prev)) {
         localStorage.setItem('carepulse_doctors', JSON.stringify(filtered));
         return filtered;
@@ -477,18 +433,36 @@ export const AppProvider = ({ children }) => {
             }
             return prev;
           });
-        }
-
-        const { data: remoteUsers, error: userErr } = await client.from('hospital_users').select('*');
+             const { data: remoteUsers, error: userErr } = await client.from('hospital_users').select('*');
         if (!userErr && Array.isArray(remoteUsers) && remoteUsers.length > 0 && isMounted) {
           const savedDelUsers = localStorage.getItem('carepulse_deleted_users');
           const deletedUserSet = new Set(savedDelUsers ? JSON.parse(savedDelUsers) : []);
-          const filteredUsers = remoteUsers.filter(u => u.active !== false && u.role !== 'DELETED' && !deletedUserSet.has(u.id) && !deletedUserSet.has(u.username) && !deletedUserSet.has(u.name));
+          const filteredUsers = remoteUsers.filter(u => u.active !== false && u.role !== 'DELETED' && !deletedUserSet.has(u.id) && !deletedUserSet.has(u.username) && !deletedUserSet.has(u.name) && !PRESET_DEMO_USERS.has(u.id) && !PRESET_DEMO_USERS.has(u.username));
+
+          if (filteredUsers.length > 0) {
+            isRemoteUpdateRef.current = true;
+            setUsers(prev => {
+              if (JSON.stringify(prev) !== JSON.stringify(filteredUsers)) {
+                return filteredUsers;
+              }
+              return prev;
+            });
+          }
+        }
+
+        const { data: remoteDocs, error: docErr } = await client.from('hospital_doctors').select('*');
+        if (!docErr && Array.isArray(remoteDocs) && isMounted) {
+          const savedDelDocs = localStorage.getItem('carepulse_deleted_doctors');
+          const deletedDocSet = new Set(savedDelDocs ? JSON.parse(savedDelDocs) : []);
+          const fetchedDocNames = remoteDocs.map(d => d.name).filter(name => name && !deletedDocSet.has(name) && !PRESET_DEMO_DOCTORS.has(name));
 
           isRemoteUpdateRef.current = true;
-          setUsers(prev => {
-            if (JSON.stringify(prev) !== JSON.stringify(filteredUsers)) {
-              return filteredUsers;
+          setDoctors(prev => {
+            const filteredPrev = prev.filter(d => !deletedDocSet.has(d) && !PRESET_DEMO_DOCTORS.has(d));
+            const merged = Array.from(new Set([...fetchedDocNames, ...filteredPrev]));
+            if (JSON.stringify(merged) !== JSON.stringify(prev)) {
+              localStorage.setItem('carepulse_doctors', JSON.stringify(merged));
+              return merged;
             }
             return prev;
           });
@@ -582,7 +556,7 @@ export const AppProvider = ({ children }) => {
             const savedDelUsers = localStorage.getItem('carepulse_deleted_users');
             const deletedUserSet = new Set(savedDelUsers ? JSON.parse(savedDelUsers) : []);
 
-            if (u.active === false || u.role === 'DELETED' || deletedUserSet.has(u.id) || deletedUserSet.has(u.username) || deletedUserSet.has(u.name)) {
+            if (u.active === false || u.role === 'DELETED' || deletedUserSet.has(u.id) || deletedUserSet.has(u.username) || deletedUserSet.has(u.name) || PRESET_DEMO_USERS.has(u.id) || PRESET_DEMO_USERS.has(u.username)) {
               isRemoteUpdateRef.current = true;
               setUsers(prev => prev.filter(item => item.id !== u.id && item.username !== u.username && item.name !== u.name));
               return;
@@ -604,6 +578,39 @@ export const AppProvider = ({ children }) => {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'hospital_doctors' },
+        (payload) => {
+          if (!isMounted) return;
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            const doc = payload.new;
+            const savedDelDocs = localStorage.getItem('carepulse_deleted_doctors');
+            const deletedDocSet = new Set(savedDelDocs ? JSON.parse(savedDelDocs) : []);
+
+            if (!doc.name || deletedDocSet.has(doc.name) || PRESET_DEMO_DOCTORS.has(doc.name)) {
+              isRemoteUpdateRef.current = true;
+              setDoctors(prev => prev.filter(item => item !== doc.name));
+              return;
+            }
+
+            isRemoteUpdateRef.current = true;
+            setDoctors(prev => {
+              if (!prev.includes(doc.name)) {
+                const next = [...prev, doc.name];
+                localStorage.setItem('carepulse_doctors', JSON.stringify(next));
+                return next;
+              }
+              return prev;
+            });
+          } else if (payload.eventType === 'DELETE') {
+            if (payload.old && payload.old.name) {
+              isRemoteUpdateRef.current = true;
+              setDoctors(prev => prev.filter(item => item !== payload.old.name));
+            }
+          }
+        }
+      )`;     )
       .subscribe();
 
     return () => {
@@ -672,7 +679,7 @@ export const AppProvider = ({ children }) => {
 
     try {
       const records = usersList
-        .filter(u => u && u.active !== false && u.role !== 'DELETED')
+        .filter(u => u && u.active !== false && u.role !== 'DELETED' && !PRESET_DEMO_USERS.has(u.id) && !PRESET_DEMO_USERS.has(u.username))
         .map(u => ({
           id: u.id,
           username: u.username || u.id,
@@ -694,6 +701,28 @@ export const AppProvider = ({ children }) => {
       }
     } catch (e) {
       console.warn('Supabase user sync failed:', e);
+    }
+  };
+
+  const pushDoctorsToSupabase = async (doctorsList) => {
+    const client = getSupabaseClient(supabaseConfig.url, supabaseConfig.anonKey);
+    if (!client || !Array.isArray(doctorsList)) return;
+
+    try {
+      const records = doctorsList
+        .filter(d => d && d.trim() && !PRESET_DEMO_DOCTORS.has(d.trim()))
+        .map(d => ({
+          id: 'DOC-' + d.trim().toLowerCase().replace(/[^a-z0-9]/g, '_'),
+          name: d.trim()
+        }));
+      if (records.length > 0) {
+        const { error } = await client.from('hospital_doctors').upsert(records, { onConflict: 'name' });
+        if (error) {
+          console.warn('Supabase hospital_doctors upsert warning:', error);
+        }
+      }
+    } catch (e) {
+      console.warn('Supabase doctor sync failed:', e);
     }
   };
 
@@ -954,6 +983,11 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('carepulse_doctors', JSON.stringify(doctors));
     pushToLocalServerSync({ doctors });
+    if (isRemoteUpdateRef.current) {
+      isRemoteUpdateRef.current = false;
+    } else {
+      pushDoctorsToSupabase(doctors);
+    }
   }, [doctors]);
 
   useEffect(() => {
@@ -1804,10 +1838,20 @@ export const AppProvider = ({ children }) => {
     const client = getSupabaseClient(supabaseConfig.url, supabaseConfig.anonKey);
     if (client) {
       try {
-        if (targetId) await client.from('hospital_users').update({ active: false, role: 'DELETED' }).eq('id', targetId);
-        if (targetUsername) await client.from('hospital_users').update({ active: false, role: 'DELETED' }).eq('username', targetUsername);
-        if (targetName) await client.from('hospital_users').update({ active: false, role: 'DELETED' }).eq('name', targetName);
+        if (targetId) {
+          await client.from('hospital_users').update({ active: false, role: 'DELETED' }).eq('id', targetId);
+          await client.from('hospital_users').delete().eq('id', targetId);
+        }
+        if (targetUsername) {
+          await client.from('hospital_users').update({ active: false, role: 'DELETED' }).eq('username', targetUsername);
+          await client.from('hospital_users').delete().eq('username', targetUsername);
+        }
+        if (targetName) {
+          await client.from('hospital_users').update({ active: false, role: 'DELETED' }).eq('name', targetName);
+          await client.from('hospital_users').delete().eq('name', targetName);
+        }
         await client.from('hospital_users').update({ active: false, role: 'DELETED' }).eq('id', idVal);
+        await client.from('hospital_users').delete().eq('id', idVal);
       } catch (e) {}
     }
     triggerToast(`User "${targetName || targetId || userId}" removed from directory.`, 'info');
@@ -1929,6 +1973,17 @@ export const AppProvider = ({ children }) => {
       localStorage.setItem('carepulse_doctors', JSON.stringify(next));
       return next;
     });
+
+    const client = getSupabaseClient(supabaseConfig.url, supabaseConfig.anonKey);
+    if (client) {
+      client.from('hospital_doctors').upsert({
+        id: 'DOC-' + trimmed.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+        name: trimmed
+      }, { onConflict: 'name' }).then(({ error }) => {
+        if (error) console.warn('Supabase doctor insert error:', error);
+      });
+    }
+
     triggerToast(`New doctor "${trimmed}" added to directory successfully!`, 'success');
   };
 
@@ -1955,14 +2010,16 @@ export const AppProvider = ({ children }) => {
     const client = getSupabaseClient(supabaseConfig.url, supabaseConfig.anonKey);
     if (client) {
       try {
+        await client.from('hospital_doctors').delete().eq('name', target);
         await client.from('hospital_users').update({ active: false, role: 'DELETED' }).eq('name', target);
+        await client.from('hospital_users').delete().eq('name', target);
       } catch (e) {}
     }
 
     triggerToast(`Doctor "${doctorName}" removed from directory.`, 'info');
   };
 
-  const clearAllDoctors = () => {
+  const clearAllDoctors = async () => {
     // Add all current doctors to deleted doctors blacklist
     try {
       const savedDeleted = localStorage.getItem('carepulse_deleted_doctors');
@@ -1977,7 +2034,15 @@ export const AppProvider = ({ children }) => {
 
     setDoctors([]);
     localStorage.setItem('carepulse_doctors', JSON.stringify([]));
-    triggerToast('All preset doctors cleared from directory.', 'info');
+
+    const client = getSupabaseClient(supabaseConfig.url, supabaseConfig.anonKey);
+    if (client) {
+      try {
+        await client.from('hospital_doctors').delete().neq('id', '');
+      } catch (e) {}
+    }
+
+    triggerToast('All doctors cleared from directory.', 'info');
   };
 
   const updateDiscountRequest = (requestId, updatedFields) => {

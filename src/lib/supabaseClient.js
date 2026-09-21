@@ -101,9 +101,17 @@ CREATE TABLE IF NOT EXISTS discount_requests (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. Turn ON Row Level Security (RLS) & Grant access
+-- 3. Create Hospital Doctors Directory Table
+CREATE TABLE IF NOT EXISTS hospital_doctors (
+  id TEXT PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. Turn ON Row Level Security (RLS) & Grant access
 ALTER TABLE hospital_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discount_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hospital_doctors ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow public select hospital_users" ON hospital_users FOR SELECT USING (true);
 CREATE POLICY "Allow public insert hospital_users" ON hospital_users FOR INSERT WITH CHECK (true);
@@ -115,7 +123,13 @@ CREATE POLICY "Allow public insert discount_requests" ON discount_requests FOR I
 CREATE POLICY "Allow public update discount_requests" ON discount_requests FOR UPDATE USING (true);
 CREATE POLICY "Allow public delete discount_requests" ON discount_requests FOR DELETE USING (true);
 
--- 4. Enable Realtime Publications for Live Sync across all browsers/devices
+CREATE POLICY "Allow public select hospital_doctors" ON hospital_doctors FOR SELECT USING (true);
+CREATE POLICY "Allow public insert hospital_doctors" ON hospital_doctors FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update hospital_doctors" ON hospital_doctors FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete hospital_doctors" ON hospital_doctors FOR DELETE USING (true);
+
+-- 5. Enable Realtime Publications for Live Sync across all browsers/devices
 ALTER PUBLICATION supabase_realtime ADD TABLE discount_requests;
 ALTER PUBLICATION supabase_realtime ADD TABLE hospital_users;
+ALTER PUBLICATION supabase_realtime ADD TABLE hospital_doctors;
 `;

@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node -e \"require('fs').copyFileSync('dist/index.html', 'dist/404.html')\"",
+    "build:deploy": "node scripts/prepare-deployment.js",
+    "start:production": "cd deployment && node server.js",
     "lint": "vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",

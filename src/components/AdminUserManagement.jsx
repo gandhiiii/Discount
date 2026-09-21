@@ -378,7 +378,7 @@ export const AdminUserManagement = () => {
           <input
             type="text"
             required
-            placeholder="Type new doctor name (e.g. Dr. Sarah Jenkins, Dr. Rajesh Kumar, Dr. Elena Rostova)..."
+            placeholder="Type new doctor name (e.g. Dr. John Smith)..."
             value={newDoctorName}
             onChange={e => setNewDoctorName(e.target.value)}
             className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-600 font-medium transition-all"
