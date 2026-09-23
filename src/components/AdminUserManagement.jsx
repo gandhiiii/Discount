@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useApp, isPresetDemoDoctor } from '../context/AppContext';
-import { 
-  UserPlus, 
-  ShieldCheck, 
-  Mail, 
-  Phone, 
-  Percent, 
-  CheckCircle2, 
-  Trash2, 
-  Edit3, 
+import {
+  UserPlus,
+  ShieldCheck,
+  Mail,
+  Phone,
+  Percent,
+  CheckCircle2,
+  Trash2,
+  Edit3,
   UserCircle,
   AlertCircle,
   Building,
@@ -18,12 +18,12 @@ import {
 } from 'lucide-react';
 
 export const AdminUserManagement = () => {
-  const { 
-    users, 
-    addUser, 
-    updateUser, 
-    deleteUser, 
-    activeUser, 
+  const {
+    users,
+    addUser,
+    updateUser,
+    deleteUser,
+    activeUser,
     setActiveUser,
     departments,
     addDepartment,
@@ -38,7 +38,7 @@ export const AdminUserManagement = () => {
     clearAllDoctors,
     getRoleMeta
   } = useApp();
-  
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
   const [newDeptName, setNewDeptName] = useState('');
@@ -143,7 +143,7 @@ export const AdminUserManagement = () => {
 
   return (
     <div className="space-y-6 text-slate-900">
-      
+
       {/* Top Banner Notice */}
       <div className="glass-card p-6 rounded-2xl border border-blue-200 bg-white relative overflow-hidden shadow-sm">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -239,7 +239,7 @@ export const AdminUserManagement = () => {
           <span className="text-xs text-slate-500 font-mono font-medium">{departments.length} Departments Active</span>
         </div>
 
-        <form 
+        <form
           onSubmit={(e) => {
             e.preventDefault();
             if (newDeptName.trim()) {
@@ -267,7 +267,7 @@ export const AdminUserManagement = () => {
 
         <div className="flex flex-wrap gap-2 pt-2">
           {departments.map((dept) => (
-            <div 
+            <div
               key={dept}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800"
             >
@@ -295,7 +295,7 @@ export const AdminUserManagement = () => {
           <span className="text-xs text-blue-700 font-mono font-semibold">{services.length} Services Configured</span>
         </div>
 
-        <form 
+        <form
           onSubmit={(e) => {
             e.preventDefault();
             if (newServiceName.trim()) {
@@ -323,7 +323,7 @@ export const AdminUserManagement = () => {
 
         <div className="flex flex-wrap gap-2 pt-2">
           {services.map((srv) => (
-            <div 
+            <div
               key={srv}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-50/60 border border-blue-200 text-xs font-semibold text-blue-900"
             >
@@ -365,7 +365,7 @@ export const AdminUserManagement = () => {
           </div>
         </div>
 
-        <form 
+        <form
           onSubmit={(e) => {
             e.preventDefault();
             if (newDoctorName.trim()) {
@@ -393,7 +393,7 @@ export const AdminUserManagement = () => {
 
         <div className="flex flex-wrap gap-2 pt-2">
           {doctors?.filter(doc => !isPresetDemoDoctor(doc)).map((doc) => (
-            <div 
+            <div
               key={doc}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50/60 border border-emerald-200 text-xs font-semibold text-emerald-900"
             >
@@ -449,11 +449,10 @@ export const AdminUserManagement = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {users.filter(u => u && u.active !== false && u.role !== 'DELETED' && !isPresetDemoUser(u)).map(user => {
           return (
-            <div 
-              key={user.id} 
-              className={`glass-card p-5 rounded-2xl bg-white border relative transition-all duration-200 hover:border-blue-400 shadow-sm ${
-                user.id === activeUser.id ? 'ring-2 ring-blue-600 border-blue-400' : 'border-slate-200'
-              }`}
+            <div
+              key={user.id}
+              className={`glass-card p-5 rounded-2xl bg-white border relative transition-all duration-200 hover:border-blue-400 shadow-sm ${user.id === activeUser.id ? 'ring-2 ring-blue-600 border-blue-400' : 'border-slate-200'
+                }`}
             >
               {user.id === activeUser.id && (
                 <span className="absolute top-4 right-4 text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-md bg-blue-600 text-white shadow-sm">
@@ -472,7 +471,7 @@ export const AdminUserManagement = () => {
 
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-base text-slate-900 truncate">{user.name}</h3>
-                  
+
                   {editingDesignationId === user.id ? (
                     <div className="mt-1 flex items-center gap-1">
                       <input
@@ -498,7 +497,7 @@ export const AdminUserManagement = () => {
                       />
                     </div>
                   ) : (
-                    <p 
+                    <p
                       onClick={() => {
                         if (isAdmin) {
                           setEditingDesignationId(user.id);
@@ -512,7 +511,7 @@ export const AdminUserManagement = () => {
                       <Edit3 className="w-3 h-3 opacity-0 group-hover/desig:opacity-100 text-blue-600 flex-shrink-0" />
                     </p>
                   )}
-                  
+
                   <div className="mt-2 flex items-center gap-2 flex-wrap">
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${getRoleMeta(user.role).color}`}>
                       {user.role} ({getRoleMeta(user.role).tier})
