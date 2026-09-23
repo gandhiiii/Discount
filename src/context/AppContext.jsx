@@ -337,7 +337,9 @@ export const AppProvider = ({ children }) => {
 
   // Zero-Cloud Local Wi-Fi Network Server Auto-Sync (/api/sync)
   const lastSyncServerTimestampRef = React.useRef(0);
-  const isRemoteUpdateRef = React.useRef(false);
+  const isRemoteRequestsRef = React.useRef(false);
+  const isRemoteUsersRef = React.useRef(false);
+  const isRemoteDoctorsRef = React.useRef(false);
 
   // Supabase Realtime Database Subscriptions & Fetching
   useEffect(() => {
@@ -393,7 +395,7 @@ export const AppProvider = ({ children }) => {
               createdAt: r.created_at,
               approvalChain: typeof r.approval_chain === 'string' ? JSON.parse(r.approval_chain) : (r.approval_chain || [])
             }));
-          isRemoteUpdateRef.current = true;
+          isRemoteRequestsRef.current = true;
           setRequests(prev => {
             if (JSON.stringify(prev) !== JSON.stringify(mapped)) {
               return mapped;
@@ -419,7 +421,7 @@ export const AppProvider = ({ children }) => {
           const filteredUsers = remoteUsers.filter(u => u.active !== false && u.role !== 'DELETED' && !deletedUserSet.has(u.id) && !deletedUserSet.has(u.username) && !deletedUserSet.has(u.name) && !isPresetDemoUser(u));
 
           if (filteredUsers.length > 0) {
-            isRemoteUpdateRef.current = true;
+            isRemoteUsersRef.current = true;
             setUsers(prev => {
               if (JSON.stringify(prev) !== JSON.stringify(filteredUsers)) {
                 return filteredUsers;
@@ -445,7 +447,7 @@ export const AppProvider = ({ children }) => {
 
           const fetchedDocNames = remoteDocs.map(d => d.name).filter(name => name && !deletedDocSet.has(name) && !isPresetDemoDoctor(name));
 
-          isRemoteUpdateRef.current = true;
+          isRemoteDoctorsRef.current = true;
           setDoctors(prev => {
             const filteredPrev = prev.filter(d => !deletedDocSet.has(d) && !isPresetDemoDoctor(d));
             const merged = Array.from(new Set([...fetchedDocNames, ...filteredPrev]));
@@ -478,7 +480,7 @@ export const AppProvider = ({ children }) => {
             const deletedReqSet = new Set(savedDelReqs ? JSON.parse(savedDelReqs) : []);
 
             if (r.status === 'DELETED' || deletedReqSet.has(r.id)) {
-              isRemoteUpdateRef.current = true;
+              isRemoteRequestsRef.current = true;
               setRequests(prev => prev.filter(item => item.id !== r.id));
               return;
             }
@@ -519,7 +521,7 @@ export const AppProvider = ({ children }) => {
               approvalChain: typeof r.approval_chain === 'string' ? JSON.parse(r.approval_chain) : (r.approval_chain || [])
             };
 
-            isRemoteUpdateRef.current = true;
+            isRemoteRequestsRef.current = true;
             setRequests(prev => {
               const idx = prev.findIndex(item => item.id === updatedReq.id);
               if (idx >= 0) {
@@ -530,7 +532,7 @@ export const AppProvider = ({ children }) => {
               return [updatedReq, ...prev];
             });
           } else if (payload.eventType === 'DELETE') {
-            isRemoteUpdateRef.current = true;
+            isRemoteRequestsRef.current = true;
             setRequests(prev => prev.filter(item => item.id !== payload.old.id));
           }
         }
@@ -546,12 +548,12 @@ export const AppProvider = ({ children }) => {
             const deletedUserSet = new Set(savedDelUsers ? JSON.parse(savedDelUsers) : []);
 
             if (u.active === false || u.role === 'DELETED' || deletedUserSet.has(u.id) || deletedUserSet.has(u.username) || deletedUserSet.has(u.name) || isPresetDemoUser(u)) {
-              isRemoteUpdateRef.current = true;
+              isRemoteUsersRef.current = true;
               setUsers(prev => prev.filter(item => item.id !== u.id && item.username !== u.username && item.name !== u.name));
               return;
             }
 
-            isRemoteUpdateRef.current = true;
+            isRemoteUsersRef.current = true;
             setUsers(prev => {
               const idx = prev.findIndex(item => item.id === u.id || item.username === u.username);
               if (idx >= 0) {
@@ -562,7 +564,7 @@ export const AppProvider = ({ children }) => {
               return [...prev, u];
             });
           } else if (payload.eventType === 'DELETE') {
-            isRemoteUpdateRef.current = true;
+            isRemoteUsersRef.current = true;
             setUsers(prev => prev.filter(u => u.id !== payload.old.id && u.username !== payload.old.username));
           }
         }
@@ -578,12 +580,12 @@ export const AppProvider = ({ children }) => {
             const deletedDocSet = new Set(savedDelDocs ? JSON.parse(savedDelDocs) : []);
 
             if (!doc.name || deletedDocSet.has(doc.name) || isPresetDemoDoctor(doc.name)) {
-              isRemoteUpdateRef.current = true;
+              isRemoteDoctorsRef.current = true;
               setDoctors(prev => prev.filter(item => item !== doc.name));
               return;
             }
 
-            isRemoteUpdateRef.current = true;
+            isRemoteDoctorsRef.current = true;
             setDoctors(prev => {
               if (!prev.includes(doc.name)) {
                 const next = [...prev, doc.name];
@@ -594,7 +596,7 @@ export const AppProvider = ({ children }) => {
             });
           } else if (payload.eventType === 'DELETE') {
             if (payload.old && payload.old.name) {
-              isRemoteUpdateRef.current = true;
+              isRemoteDoctorsRef.current = true;
               setDoctors(prev => prev.filter(item => item !== payload.old.name));
             }
           }
@@ -961,8 +963,8 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('carepulse_users', JSON.stringify(users));
     pushToLocalServerSync({ users });
-    if (isRemoteUpdateRef.current) {
-      isRemoteUpdateRef.current = false;
+    if (isRemoteUsersRef.current) {
+      isRemoteUsersRef.current = false;
     } else {
       pushUsersToSupabase(users);
     }
@@ -981,8 +983,8 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('carepulse_doctors', JSON.stringify(doctors));
     pushToLocalServerSync({ doctors });
-    if (isRemoteUpdateRef.current) {
-      isRemoteUpdateRef.current = false;
+    if (isRemoteDoctorsRef.current) {
+      isRemoteDoctorsRef.current = false;
     } else {
       pushDoctorsToSupabase(doctors);
     }
@@ -991,8 +993,8 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('carepulse_requests', JSON.stringify(requests));
     pushToLocalServerSync({ requests });
-    if (isRemoteUpdateRef.current) {
-      isRemoteUpdateRef.current = false;
+    if (isRemoteRequestsRef.current) {
+      isRemoteRequestsRef.current = false;
     } else {
       pushRequestsToSupabase(requests);
     }
