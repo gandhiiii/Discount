@@ -171,16 +171,6 @@ export const Header = ({
                 </button>
               )}
 
-              {/* Mobile Sync Trigger Button */}
-              <button
-                onClick={onOpenMobileSyncModal}
-                className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs flex items-center gap-1.5 transition-all"
-                title="Mobile Sync & QR Code"
-              >
-                <Smartphone className="w-4 h-4 text-blue-600" />
-                <span>Mobile Sync</span>
-              </button>
-
               {/* Automated Daily Data Backup & Snapshots Button */}
               <button
                 onClick={() => onOpenPortingModal('DAILY_BACKUP')}
@@ -200,36 +190,6 @@ export const Header = ({
               >
                 <RotateCcw className="w-4 h-4 text-amber-600" />
                 <span>Data Recovery</span>
-              </button>
-
-              {/* Port & API Integration Modal Button */}
-              <button
-                onClick={() => onOpenPortingModal('EXPORT_IMPORT')}
-                className="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
-                title="Software Migration, OpenAPI & REST Integration API"
-              >
-                <Cpu className="w-4 h-4 text-indigo-600" />
-                <span>Port & API</span>
-              </button>
-
-              {/* Tally ERP 9 / Tally Prime Accounting Button */}
-              <button
-                onClick={onOpenTallyModal}
-                className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
-                title="Tally ERP 9 / Tally Prime Direct Integration & Data Merger"
-              >
-                <Calculator className="w-4 h-4 text-amber-600" />
-                <span>Tally Sync</span>
-              </button>
-
-              {/* Tally Interactive Clone Module */}
-              <button
-                onClick={onOpenTallyCloneModal}
-                className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-md shadow-amber-500/20 active:scale-95"
-                title="Interactive Tally Prime Emulator & Accounting Vouchers Module"
-              >
-                <Building2 className="w-4 h-4 text-slate-950 stroke-[2.5]" />
-                <span>Tally Clone OS</span>
               </button>
 
               {/* Quick Manual Sync Refresh Button */}
@@ -369,14 +329,6 @@ export const Header = ({
             {hasFullAccess && (
               <>
                 <button
-                  onClick={() => { onOpenMobileSyncModal(); setMobileMenuOpen(false); }}
-                  className="py-2.5 px-3 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 font-bold text-xs flex items-center justify-center gap-1.5"
-                >
-                  <Smartphone className="w-4 h-4" />
-                  <span>Mobile Sync</span>
-                </button>
-
-                <button
                   onClick={() => { onOpenPortingModal('DAILY_BACKUP'); setMobileMenuOpen(false); }}
                   className="py-2.5 px-3 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5"
                 >
@@ -390,14 +342,6 @@ export const Header = ({
                 >
                   <RotateCcw className="w-4 h-4 text-amber-600" />
                   <span>Data Recovery</span>
-                </button>
-
-                <button
-                  onClick={() => { onOpenPortingModal(); setMobileMenuOpen(false); }}
-                  className="py-2.5 px-3 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold text-xs flex items-center justify-center gap-1.5"
-                >
-                  <Cpu className="w-4 h-4" />
-                  <span>Port & API</span>
                 </button>
 
                 {!isBillingStaff && (
