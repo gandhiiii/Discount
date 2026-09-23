@@ -113,15 +113,30 @@ ALTER TABLE hospital_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discount_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hospital_doctors ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow public select hospital_users" ON hospital_users;
+DROP POLICY IF EXISTS "Allow public insert hospital_users" ON hospital_users;
+DROP POLICY IF EXISTS "Allow public update hospital_users" ON hospital_users;
+DROP POLICY IF EXISTS "Allow public delete hospital_users" ON hospital_users;
+
 CREATE POLICY "Allow public select hospital_users" ON hospital_users FOR SELECT USING (true);
 CREATE POLICY "Allow public insert hospital_users" ON hospital_users FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update hospital_users" ON hospital_users FOR UPDATE USING (true);
 CREATE POLICY "Allow public delete hospital_users" ON hospital_users FOR DELETE USING (true);
 
+DROP POLICY IF EXISTS "Allow public select discount_requests" ON discount_requests;
+DROP POLICY IF EXISTS "Allow public insert discount_requests" ON discount_requests;
+DROP POLICY IF EXISTS "Allow public update discount_requests" ON discount_requests;
+DROP POLICY IF EXISTS "Allow public delete discount_requests" ON discount_requests;
+
 CREATE POLICY "Allow public select discount_requests" ON discount_requests FOR SELECT USING (true);
 CREATE POLICY "Allow public insert discount_requests" ON discount_requests FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update discount_requests" ON discount_requests FOR UPDATE USING (true);
 CREATE POLICY "Allow public delete discount_requests" ON discount_requests FOR DELETE USING (true);
+
+DROP POLICY IF EXISTS "Allow public select hospital_doctors" ON hospital_doctors;
+DROP POLICY IF EXISTS "Allow public insert hospital_doctors" ON hospital_doctors;
+DROP POLICY IF EXISTS "Allow public update hospital_doctors" ON hospital_doctors;
+DROP POLICY IF EXISTS "Allow public delete hospital_doctors" ON hospital_doctors;
 
 CREATE POLICY "Allow public select hospital_doctors" ON hospital_doctors FOR SELECT USING (true);
 CREATE POLICY "Allow public insert hospital_doctors" ON hospital_doctors FOR INSERT WITH CHECK (true);
@@ -129,7 +144,25 @@ CREATE POLICY "Allow public update hospital_doctors" ON hospital_doctors FOR UPD
 CREATE POLICY "Allow public delete hospital_doctors" ON hospital_doctors FOR DELETE USING (true);
 
 -- 5. Enable Realtime Publications for Live Sync across all browsers/devices
-ALTER PUBLICATION supabase_realtime ADD TABLE discount_requests;
-ALTER PUBLICATION supabase_realtime ADD TABLE hospital_users;
-ALTER PUBLICATION supabase_realtime ADD TABLE hospital_doctors;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'discount_requests'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE discount_requests;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'hospital_users'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE hospital_users;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'hospital_doctors'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE hospital_doctors;
+  END IF;
+END $$;
 `;
