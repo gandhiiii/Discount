@@ -610,7 +610,15 @@ export const AppProvider = ({ children }) => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[Supabase Realtime] ✅ Connected & Subscribed to live database changes');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.warn('[Supabase Realtime] ⚠️ Channel Error:', err);
+        } else if (status === 'TIMED_OUT') {
+          console.warn('[Supabase Realtime] ⏱️ Connection timed out');
+        }
+      });
 
     return () => {
       isMounted = false;
