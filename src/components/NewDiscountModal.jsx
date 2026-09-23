@@ -54,14 +54,15 @@ export const NewDiscountModal = ({ onClose }) => {
 
   // Sync default doctor when doctors array updates asynchronously
   React.useEffect(() => {
-    if (doctors && doctors.length > 0) {
+    const availableDocs = (doctors || []).filter(d => !isPresetDemoDoctor(d));
+    if (availableDocs.length > 0) {
       setFormData(prev => {
-        if (!prev.doctorName || prev.doctorName === 'Dr. Michael Chang' || !doctors.includes(prev.doctorName)) {
-          const firstDoc = doctors[0];
+        if (!prev.doctorName || isPresetDemoDoctor(prev.doctorName) || !availableDocs.includes(prev.doctorName)) {
+          const firstDoc = availableDocs[0];
           return {
             ...prev,
             doctorName: firstDoc,
-            referenceName: (prev.referenceName === 'Dr. Michael Chang' || !prev.referenceName) ? firstDoc : prev.referenceName
+            referenceName: (!prev.referenceName || isPresetDemoDoctor(prev.referenceName)) ? firstDoc : prev.referenceName
           };
         }
         return prev;

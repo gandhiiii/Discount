@@ -35,11 +35,16 @@ export const PRESET_DEMO_DOCTORS_KEYWORDS = [
   'dr. ananya sharma',
   'dr test',
   'test doctor',
+  'dr mirant dave',
+  'mirant dave',
+  'mirant',
+  'dave',
   'sarah',
   'jenkins',
   'michael',
   'chang',
   'rajesh',
+  'kumar',
   'elena',
   'rostova',
   'ananya',
@@ -289,7 +294,7 @@ export const AppProvider = ({ children }) => {
     try {
       const client = getSupabaseClient(supabaseConfig?.url, supabaseConfig?.anonKey);
       if (client) {
-        ['sarah', 'jenkins', 'jenkin', 'michael', 'chang', 'rajesh', 'kumar', 'elena', 'rostova', 'ananya', 'sharma', 'test', 'dr test'].forEach(async (kw) => {
+        ['sarah', 'jenkins', 'jenkin', 'michael', 'chang', 'rajesh', 'kumar', 'elena', 'rostova', 'ananya', 'sharma', 'test', 'dr test', 'mirant', 'dave'].forEach(async (kw) => {
           try {
             await client.from('hospital_doctors').delete().ilike('name', `%${kw}%`);
             await client.from('hospital_users').delete().ilike('name', `%${kw}%`);

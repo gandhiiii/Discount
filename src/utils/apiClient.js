@@ -108,7 +108,7 @@ export function adaptExternalHisRecord(hisRecord) {
     patientGender: hisRecord.gender || 'Male',
     department: hisRecord.dept || hisRecord.department || 'OPD',
     serviceName: hisRecord.service || hisRecord.procedure || 'Consultation Fees',
-    doctorName: hisRecord.doctor || hisRecord.consultant || 'Dr. Rajesh Kumar',
+    doctorName: hisRecord.doctor || hisRecord.consultant || 'Attending Doctor',
     totalBillAmount: Number(hisRecord.gross_amount || hisRecord.total_bill || hisRecord.amount) || 0,
     requestedDiscountType: hisRecord.discount_unit === 'INR' ? 'FIXED' : 'PERCENTAGE',
     requestedDiscountVal: Number(hisRecord.discount_value || hisRecord.discount_percent || 10),
