@@ -758,11 +758,11 @@ export const AppProvider = ({ children }) => {
             const deletedUserSet = new Set(savedDelUsers ? JSON.parse(savedDelUsers) : []);
             const mergedMap = new Map(prev.map(u => [u.id, u]));
             data.users.forEach(u => {
-              if (u && u.active !== false && u.role !== 'DELETED' && !deletedUserSet.has(u.id) && !deletedUserSet.has(u.username) && !deletedUserSet.has(u.name) && !PRESET_DEMO_USERS.has(u.id) && !PRESET_DEMO_USERS.has(u.username)) {
+              if (u && u.active !== false && u.role !== 'DELETED' && !deletedUserSet.has(u.id) && !deletedUserSet.has(u.username) && !deletedUserSet.has(u.name) && !isPresetDemoUser(u)) {
                 mergedMap.set(u.id, u);
               }
             });
-            const merged = Array.from(mergedMap.values()).filter(u => !PRESET_DEMO_USERS.has(u.id) && !PRESET_DEMO_USERS.has(u.username));
+            const merged = Array.from(mergedMap.values()).filter(u => !isPresetDemoUser(u));
             localStorage.setItem('carepulse_users', JSON.stringify(merged));
             return merged;
           });
@@ -771,8 +771,8 @@ export const AppProvider = ({ children }) => {
           setDoctors(prev => {
             const savedDelDocs = localStorage.getItem('carepulse_deleted_doctors');
             const deletedDocSet = new Set(savedDelDocs ? JSON.parse(savedDelDocs) : []);
-            const filteredIncoming = data.doctors.filter(d => d && !deletedDocSet.has(d) && !PRESET_DEMO_DOCTORS.has(d));
-            const merged = Array.from(new Set([...prev, ...filteredIncoming])).filter(d => !deletedDocSet.has(d) && !PRESET_DEMO_DOCTORS.has(d));
+            const filteredIncoming = data.doctors.filter(d => d && !deletedDocSet.has(d) && !isPresetDemoDoctor(d));
+            const merged = Array.from(new Set([...prev, ...filteredIncoming])).filter(d => !deletedDocSet.has(d) && !isPresetDemoDoctor(d));
             localStorage.setItem('carepulse_doctors', JSON.stringify(merged));
             return merged;
           });
@@ -814,7 +814,7 @@ export const AppProvider = ({ children }) => {
         if (Array.isArray(parsed)) {
           const savedDelUsers = localStorage.getItem('carepulse_deleted_users');
           const deletedUserSet = new Set(savedDelUsers ? JSON.parse(savedDelUsers) : []);
-          const filtered = parsed.filter(u => u.active !== false && u.role !== 'DELETED' && !deletedUserSet.has(u.id) && !deletedUserSet.has(u.username) && !deletedUserSet.has(u.name) && !PRESET_DEMO_USERS.has(u.id) && !PRESET_DEMO_USERS.has(u.username));
+          const filtered = parsed.filter(u => u.active !== false && u.role !== 'DELETED' && !deletedUserSet.has(u.id) && !deletedUserSet.has(u.username) && !deletedUserSet.has(u.name) && !isPresetDemoUser(u));
           setUsers(filtered);
         }
       }
@@ -824,7 +824,7 @@ export const AppProvider = ({ children }) => {
         if (Array.isArray(parsed)) {
           const savedDelDocs = localStorage.getItem('carepulse_deleted_doctors');
           const deletedDocSet = new Set(savedDelDocs ? JSON.parse(savedDelDocs) : []);
-          const filtered = parsed.filter(d => !deletedDocSet.has(d) && !PRESET_DEMO_DOCTORS.has(d));
+          const filtered = parsed.filter(d => !deletedDocSet.has(d) && !isPresetDemoDoctor(d));
           setDoctors(filtered);
         }
       }
