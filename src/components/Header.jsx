@@ -41,6 +41,20 @@ export const Header = ({
   const isBillingStaff = isBillingRole(activeUser?.role);
   const roleMeta = getRoleMeta(activeUser?.role);
 
+  const userRole = activeUser?.role || '';
+  const hasFullAccess = [
+    'ADMIN',
+    'CFO',
+    'CHIEF_ACCOUNTANT',
+    'FINANCE_MGR',
+    'BILLING_MANAGER',
+    'MD',
+    'AD',
+    'DIRECTOR',
+    'CHAIRMAN',
+    'VICE_CHAIRMAN'
+  ].includes(userRole);
+
   return (
     <header className="bg-white/95 backdrop-blur-md sticky top-0 z-30 border-b border-slate-200 px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
@@ -69,7 +83,7 @@ export const Header = ({
           </div>
         </div>
 
-        {/* Center Tabs: Desktop Only */}
+        {/* Center Tabs: Desktop Only (Admin Role Only) */}
         {activeUser?.role === 'ADMIN' && (
           <div className="hidden lg:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
@@ -142,102 +156,107 @@ export const Header = ({
             New Discount
           </button>
 
-          {/* Export Excel Button */}
-          {!isBillingStaff && (
-            <button
-              onClick={onOpenExcelModal}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold text-xs transition-all active:scale-95"
-              title="Download Formatted Excel Report"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-              <span>Export Excel</span>
-            </button>
+          {/* Executive & Admin Only Tools */}
+          {hasFullAccess && (
+            <>
+              {/* Export Excel Button */}
+              {!isBillingStaff && (
+                <button
+                  onClick={onOpenExcelModal}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold text-xs transition-all active:scale-95"
+                  title="Download Formatted Excel Report"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                  <span>Export Excel</span>
+                </button>
+              )}
+
+              {/* Mobile Sync Trigger Button */}
+              <button
+                onClick={onOpenMobileSyncModal}
+                className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs flex items-center gap-1.5 transition-all"
+                title="Mobile Sync & QR Code"
+              >
+                <Smartphone className="w-4 h-4 text-blue-600" />
+                <span>Mobile Sync</span>
+              </button>
+
+              {/* Automated Daily Data Backup & Snapshots Button */}
+              <button
+                onClick={() => onOpenPortingModal('DAILY_BACKUP')}
+                className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                title="Daily Data Backup, Automated Snapshots & History"
+              >
+                <Calendar className="w-4 h-4 text-emerald-600" />
+                <span>Daily Data Backup</span>
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              </button>
+
+              {/* System Data Recovery & Restore Button */}
+              <button
+                onClick={() => onOpenPortingModal('RECOVERY')}
+                className="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                title="System Data Recovery, Snapshot Restore & Backup Upload"
+              >
+                <RotateCcw className="w-4 h-4 text-amber-600" />
+                <span>Data Recovery</span>
+              </button>
+
+              {/* Port & API Integration Modal Button */}
+              <button
+                onClick={() => onOpenPortingModal('EXPORT_IMPORT')}
+                className="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                title="Software Migration, OpenAPI & REST Integration API"
+              >
+                <Cpu className="w-4 h-4 text-indigo-600" />
+                <span>Port & API</span>
+              </button>
+
+              {/* Tally ERP 9 / Tally Prime Accounting Button */}
+              <button
+                onClick={onOpenTallyModal}
+                className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                title="Tally ERP 9 / Tally Prime Direct Integration & Data Merger"
+              >
+                <Calculator className="w-4 h-4 text-amber-600" />
+                <span>Tally Sync</span>
+              </button>
+
+              {/* Tally Interactive Clone Module */}
+              <button
+                onClick={onOpenTallyCloneModal}
+                className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-md shadow-amber-500/20 active:scale-95"
+                title="Interactive Tally Prime Emulator & Accounting Vouchers Module"
+              >
+                <Building2 className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                <span>Tally Clone OS</span>
+              </button>
+
+              {/* Quick Manual Sync Refresh Button */}
+              <button
+                onClick={() => {
+                  if (manualSync) manualSync();
+                }}
+                className="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-blue-700 border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all active:scale-95"
+                title="Instant Live Network Sync & Refresh"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-blue-600" />
+              </button>
+
+              {/* Supabase Config Trigger (Admin Only) */}
+              {activeUser?.role === 'ADMIN' && (
+                <button
+                  onClick={onOpenSupabaseModal}
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all"
+                  title="Supabase & Realtime Settings"
+                >
+                  <Radio className="w-4 h-4 text-blue-600" />
+                </button>
+              )}
+            </>
           )}
 
-          {/* Mobile Sync Trigger Button */}
-          <button
-            onClick={onOpenMobileSyncModal}
-            className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs flex items-center gap-1.5 transition-all"
-            title="Mobile Sync & QR Code"
-          >
-            <Smartphone className="w-4 h-4 text-blue-600" />
-            <span>Mobile Sync</span>
-          </button>
-
-          {/* Automated Daily Data Backup & Snapshots Button */}
-          <button
-            onClick={() => onOpenPortingModal('DAILY_BACKUP')}
-            className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
-            title="Daily Data Backup, Automated Snapshots & History"
-          >
-            <Calendar className="w-4 h-4 text-emerald-600" />
-            <span>Daily Data Backup</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          </button>
-
-          {/* System Data Recovery & Restore Button */}
-          <button
-            onClick={() => onOpenPortingModal('RECOVERY')}
-            className="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
-            title="System Data Recovery, Snapshot Restore & Backup Upload"
-          >
-            <RotateCcw className="w-4 h-4 text-amber-600" />
-            <span>Data Recovery</span>
-          </button>
-
-          {/* Port & API Integration Modal Button */}
-          <button
-            onClick={() => onOpenPortingModal('EXPORT_IMPORT')}
-            className="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
-            title="Software Migration, OpenAPI & REST Integration API"
-          >
-            <Cpu className="w-4 h-4 text-indigo-600" />
-            <span>Port & API</span>
-          </button>
-
-          {/* Tally ERP 9 / Tally Prime Accounting Button */}
-          <button
-            onClick={onOpenTallyModal}
-            className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
-            title="Tally ERP 9 / Tally Prime Direct Integration & Data Merger"
-          >
-            <Calculator className="w-4 h-4 text-amber-600" />
-            <span>Tally Sync</span>
-          </button>
-
-          {/* Tally Interactive Clone Module */}
-          <button
-            onClick={onOpenTallyCloneModal}
-            className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-md shadow-amber-500/20 active:scale-95"
-            title="Interactive Tally Prime Emulator & Accounting Vouchers Module"
-          >
-            <Building2 className="w-4 h-4 text-slate-950 stroke-[2.5]" />
-            <span>Tally Clone OS</span>
-          </button>
-
-          {/* Quick Manual Sync Refresh Button */}
-          <button
-            onClick={() => {
-              if (manualSync) manualSync();
-            }}
-            className="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-blue-700 border border-slate-200 font-bold text-xs flex items-center gap-1 transition-all active:scale-95"
-            title="Instant Live Network Sync & Refresh"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-blue-600" />
-          </button>
-
-          {/* Supabase Config Trigger (Admin Only) */}
-          {activeUser?.role === 'ADMIN' && (
-            <button
-              onClick={onOpenSupabaseModal}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all"
-              title="Supabase & Realtime Settings"
-            >
-              <Radio className="w-4 h-4 text-blue-600" />
-            </button>
-          )}
-
-          {/* Live Notification Drawer Trigger */}
+          {/* Live Notification Drawer Trigger (Visible to All) */}
           <button
             onClick={onOpenNotifDrawer}
             className="relative p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all"
@@ -266,7 +285,7 @@ export const Header = ({
             </button>
           )}
 
-          {/* Logout Button */}
+          {/* Logout Button (Visible to All) */}
           <button
             onClick={logout}
             className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-all"
@@ -341,61 +360,65 @@ export const Header = ({
           <div className="grid grid-cols-2 gap-2 pt-1">
             <button
               onClick={() => { onOpenNewModal(); setMobileMenuOpen(false); }}
-              className="py-2.5 px-3 rounded-xl bg-blue-600 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-md"
+              className="py-2.5 px-3 rounded-xl bg-blue-600 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-md col-span-2 sm:col-span-1"
             >
               <PlusCircle className="w-4 h-4" />
               <span>New Discount</span>
             </button>
 
-            <button
-              onClick={() => { onOpenMobileSyncModal(); setMobileMenuOpen(false); }}
-              className="py-2.5 px-3 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 font-bold text-xs flex items-center justify-center gap-1.5"
-            >
-              <Smartphone className="w-4 h-4" />
-              <span>Mobile Sync</span>
-            </button>
+            {hasFullAccess && (
+              <>
+                <button
+                  onClick={() => { onOpenMobileSyncModal(); setMobileMenuOpen(false); }}
+                  className="py-2.5 px-3 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 font-bold text-xs flex items-center justify-center gap-1.5"
+                >
+                  <Smartphone className="w-4 h-4" />
+                  <span>Mobile Sync</span>
+                </button>
 
-            <button
-              onClick={() => { onOpenPortingModal('DAILY_BACKUP'); setMobileMenuOpen(false); }}
-              className="py-2.5 px-3 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5"
-            >
-              <Calendar className="w-4 h-4 text-emerald-600" />
-              <span>Daily Data Backup</span>
-            </button>
+                <button
+                  onClick={() => { onOpenPortingModal('DAILY_BACKUP'); setMobileMenuOpen(false); }}
+                  className="py-2.5 px-3 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5"
+                >
+                  <Calendar className="w-4 h-4 text-emerald-600" />
+                  <span>Daily Data Backup</span>
+                </button>
 
-            <button
-              onClick={() => { onOpenPortingModal('RECOVERY'); setMobileMenuOpen(false); }}
-              className="py-2.5 px-3 rounded-xl bg-amber-50 text-amber-900 border border-amber-300 font-extrabold text-xs flex items-center justify-center gap-1.5"
-            >
-              <RotateCcw className="w-4 h-4 text-amber-600" />
-              <span>Data Recovery</span>
-            </button>
+                <button
+                  onClick={() => { onOpenPortingModal('RECOVERY'); setMobileMenuOpen(false); }}
+                  className="py-2.5 px-3 rounded-xl bg-amber-50 text-amber-900 border border-amber-300 font-extrabold text-xs flex items-center justify-center gap-1.5"
+                >
+                  <RotateCcw className="w-4 h-4 text-amber-600" />
+                  <span>Data Recovery</span>
+                </button>
 
-            <button
-              onClick={() => { onOpenPortingModal(); setMobileMenuOpen(false); }}
-              className="py-2.5 px-3 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold text-xs flex items-center justify-center gap-1.5"
-            >
-              <Cpu className="w-4 h-4" />
-              <span>Port & API</span>
-            </button>
+                <button
+                  onClick={() => { onOpenPortingModal(); setMobileMenuOpen(false); }}
+                  className="py-2.5 px-3 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold text-xs flex items-center justify-center gap-1.5"
+                >
+                  <Cpu className="w-4 h-4" />
+                  <span>Port & API</span>
+                </button>
 
-            {!isBillingStaff && (
-              <button
-                onClick={() => { onOpenExcelModal(); setMobileMenuOpen(false); }}
-                className="py-2.5 px-3 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs flex items-center justify-center gap-1.5"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>Export Excel</span>
-              </button>
+                {!isBillingStaff && (
+                  <button
+                    onClick={() => { onOpenExcelModal(); setMobileMenuOpen(false); }}
+                    className="py-2.5 px-3 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs flex items-center justify-center gap-1.5"
+                  >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    <span>Export Excel</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => { if (manualSync) manualSync(); setMobileMenuOpen(false); }}
+                  className="py-2.5 px-3 rounded-xl bg-slate-100 text-blue-700 border border-slate-200 font-bold text-xs flex items-center justify-center gap-1.5"
+                >
+                  <RotateCcw className="w-4 h-4 text-blue-600" />
+                  <span>Sync Refresh</span>
+                </button>
+              </>
             )}
-
-            <button
-              onClick={() => { if (manualSync) manualSync(); setMobileMenuOpen(false); }}
-              className="py-2.5 px-3 rounded-xl bg-slate-100 text-blue-700 border border-slate-200 font-bold text-xs flex items-center justify-center gap-1.5"
-            >
-              <RotateCcw className="w-4 h-4 text-blue-600" />
-              <span>Sync Refresh</span>
-            </button>
           </div>
 
           <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
