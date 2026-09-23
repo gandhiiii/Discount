@@ -447,7 +447,7 @@ export const AdminUserManagement = () => {
 
       {/* Users Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {users.map(user => {
+        {users.filter(u => u && u.active !== false && u.role !== 'DELETED' && !isPresetDemoUser(u)).map(user => {
           return (
             <div 
               key={user.id} 
