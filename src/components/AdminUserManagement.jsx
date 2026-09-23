@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
+import { useApp, isPresetDemoDoctor } from '../context/AppContext';
 import { 
   UserPlus, 
   ShieldCheck, 
@@ -392,7 +392,7 @@ export const AdminUserManagement = () => {
         </form>
 
         <div className="flex flex-wrap gap-2 pt-2">
-          {doctors?.map((doc) => (
+          {doctors?.filter(doc => !isPresetDemoDoctor(doc)).map((doc) => (
             <div 
               key={doc}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50/60 border border-emerald-200 text-xs font-semibold text-emerald-900"
